@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat example application</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.2.2/jquery.form.min.js"></script>
+    <script src="/js/centrifuge.js"></script>
+    <style>
+        #chat-messages {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 70%;
+            background: yellow;
+            overflow-y: scroll;
+        }
+        #messages-form {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 70%;
+            width: 30%;
+            background: lightblue;
+        }
+        #messages-form textarea {
+            width: 100%;
+            height: 300px;
+            display: block;
+        }
+    </style>
+    <script>
+        $(function () {
+            var $messages = $("#chat-messages");
+            function loadMessages() {
+                $messages.load($messages.data("url"));
+            }
+            $("#messages-form").ajaxForm({success: function () {}});
+            $("#update").click(loadMessages);
+            loadMessages();
+
+            var centrifuge = new Centrifuge({
+                url: 'http://chat.lc/centrifugo',
+                user: '<?= $chat_id; ?>',
+                timestamp: $("body").data("timestamp") + "",
+                token: $("body").data("token")
+            });
+
+            centrifuge.subscribe("chat#<?=$chat_id; ?>", function(message) {
+                loadMessages();
+            });
+
+            centrifuge.connect();
+        });
+
+    </script>
+</head>
+<body data-token="<?= $centrifugeToken; ?>" data-timestamp="<?= $timestamp; ?>">
+    <div id="chat-messages" data-url="/messages/<?= $chat_id; ?>">
+
+    </div>
+    <form id="messages-form" method="post" action="/putMessage/<?= $chat_id; ?>">
+        <textarea name="message"></textarea>
+        <button>Send</button>
+        <button id="update" type="button">Update Messages</button>
+    </form>
+</body>
+</html>
